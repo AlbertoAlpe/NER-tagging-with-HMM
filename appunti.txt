@@ -1,0 +1,18 @@
+Progetto NER tagging
+
+-cartelle wikineural contengono: train, test, val
+	da provare lingue it, en, es
+-file python per calcolare probabilità di emissione e di transizione
+-file pyhton che implementa l'algoritmo Viterbi
+-per la valutazione?
+-smoothing?
+
+
+cacolo probabilità
+
+per ogni riga:
+-funzione split() per ottenere vettore di stringhe
+-se vet[0]="0" -> inizio frase
+-se riga successiva vuota -> fine frase
+-ricordare i tag begin e end
+ 
