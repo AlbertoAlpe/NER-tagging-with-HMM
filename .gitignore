@@ -1,6 +1,7 @@
-# Ignora le tre cartelle wikineural
-
+# Ignora le cartelle wikineural
 /wikineural_en
 /wikineural_es
 /wikineural_it
 
+
+# Ignora i file csv con le probabilità di 
