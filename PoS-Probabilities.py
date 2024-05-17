@@ -1,21 +1,23 @@
 import numpy as np
+import csv
 import os
 file_name = 'train.conllu'
 current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(current_dir, 'wikineural_en', file_name)
 
 train = open(file_path, 'r', encoding='utf-8')
-prime_100_righe = train.readlines()[:34]
+prime_100_righe = train.readlines()[:1000]
 
 emission_P = {}
-transition_P = np.zeros((9, 9), dtype=int)
-tags = []
+transition_P = np.zeros((11, 11), dtype=int)
+tags = ['BEGIN', 'END']
 words = []
 word = 0
 tag = 0
 tag_prec = None
 tpi = 0
 
+#conta le occorrenze di tag_prec->tag e di tag->parola e le inserisce nelle relative matrici
 for riga in prime_100_righe:
     riga = riga.strip()
     if riga:
@@ -40,19 +42,44 @@ for riga in prime_100_righe:
           tpi = tags.index(tag_prec)
           transition_P[tpi][tag] += 1
         tag_prec = riga[2]    
-    else:    
-        tag_prec = None         
+    else: 
+        #in questo caso il tag è END, si fanno i rispettivi calcoli e poi il tag_prec dicenta BEGIN
+        tag = "END"
+        tpi = tags.index(tag_prec)
+        transition_P[tpi][tag] += 1
+        tag_prec = "BEGIN"         
 
+print(tags)
 print(transition_P)
 
 
 
+###PROBABILITA' DI EMISSIONE###
+tagTot = 0
+for riga in emission_P:
+   #in ogni riga abbiamo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo e salviamo in tagTot
+   for i in len(riga)-1:
+      tagTot = tagTot + emission_P[riga][i]
+   #dopodichè le scorriamo di nuovo tutte per fare il calcolo
+   for i in len(riga)-1: 
+      emission_P[riga][i] /= tagTot
+
+#salva la matrice risultante in un file .csv
+emiss_csv = "emissione_en.csv"
+
+with open(emiss_csv, mode='w', newline='') as emiss:
+    writer = csv.writer(emiss)
+    writer.writerows(emission_P)
 
 
-#Probabilità di emissione
+###PROBABILITA' DI TRANSIZIONE###
+for riga in transition_P:
+   for i in len(riga)-1:
+      transition_P[riga][i] /= #occorrenze totali di tag_prec(come facciamo a calcolarle qui??)
 
+#salva la matrice risultante in un file .csv
+transiz_csv = "transizione_en.csv"
 
-
-#Probabilità di transizione
-
-
+with open(transiz_csv, mode='w', newline='') as transiz:
+    writer = csv.writer(transiz)
+    writer.writerows(transition_P)
