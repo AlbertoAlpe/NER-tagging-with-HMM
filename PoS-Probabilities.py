@@ -46,39 +46,31 @@ for riga in prime_100_righe:
         #in questo caso il tag è END, si fanno i rispettivi calcoli e poi il tag_prec dicenta BEGIN
         tag = "END"
         tpi = tags.index(tag_prec)
-        transition_P[tpi][tag] += 1
+        transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags
         tag_prec = "BEGIN"         
 
 print(tags)
 print(transition_P)
 
 
-
-###PROBABILITA' DI EMISSIONE###
-tagTot = 0
+###PROBABILITA' DI EMISSIONE E TRANSIZIONE###
 for riga in emission_P:
-   #in ogni riga abbiamo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo e salviamo in tagTot
+   tagTot = 0
+   #in ogni riga abbiamo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo in tagTot
    for i in len(riga)-1:
       tagTot = tagTot + emission_P[riga][i]
-   #dopodichè le scorriamo di nuovo tutte per fare il calcolo
-   for i in len(riga)-1: 
-      emission_P[riga][i] /= tagTot
+   for j in len(riga)-1:   #CALCOLO PROB. EMISSIONE
+      emission_P[riga][j] /= tagTot
+   for t in range(11):     #CALCOLO PROB. TRANSIZIONE (su matrice transition_P)    
+      transition_P[riga][t] /= tagTot
 
-#salva la matrice risultante in un file .csv
-emiss_csv = "emissione_en.csv"
+#salva le matrici risultanti in file .csv
+emiss_csv = "wikineural_en/emissione_en.csv"
+transiz_csv = "wikineural_en/transizione_en.csv"
 
 with open(emiss_csv, mode='w', newline='') as emiss:
     writer = csv.writer(emiss)
     writer.writerows(emission_P)
-
-
-###PROBABILITA' DI TRANSIZIONE###
-for riga in transition_P:
-   for i in len(riga)-1:
-      transition_P[riga][i] /= #occorrenze totali di tag_prec(come facciamo a calcolarle qui??)
-
-#salva la matrice risultante in un file .csv
-transiz_csv = "transizione_en.csv"
 
 with open(transiz_csv, mode='w', newline='') as transiz:
     writer = csv.writer(transiz)
