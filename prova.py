@@ -1,3 +1,4 @@
+import numpy as np
 import csv
 import os
 file_name = 'train.conllu'
@@ -8,15 +9,13 @@ train = open(file_path, 'r', encoding='utf-8')
 prime_100_righe = train.readlines()[:100]
 
 
-emission_P = [[], []]           #matrice iniziale composta da due righe vuote
-transition_P = [[0, 0], [0, 0]]
-#emission_P = [[], []]
-#transition_P = [[], []]  
-tags = ['BEGIN', 'END']
+emission_P = [[], []]     #matrice iniziale composta da due righe vuote
+transition_P = [[0, 0], [0, 0]]  
+tags = ['START', 'END']
 words = []
 word = 0
 tag = 0
-tag_prec = 'BEGIN'
+tag_prec = 'START'
 tpi = 0
 
 #due funzioni per aggiungere dinamicamente una riga o una colonna alle matrici
@@ -62,13 +61,27 @@ for riga in prime_100_righe:
         transition_P[tpi][tag] += 1
         tag_prec = riga[2]
     else: 
-        #in questo caso la riga è vuota => il tag è END, si fanno i calcoli necessari e poi il tag_prec diventa BEGIN
+        #in questo caso la riga è vuota => il tag è END, si fanno i calcoli necessari e poi il tag_prec diventa START
         tpi = tags.index(tag_prec)
         transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags
-        tag_prec = "BEGIN"         
+        tag_prec = "START"         
 
-print(tags)
-print(transition_P)
+#print(tags)
+#print(transition_P)
+
+#CALCOLO PROB. EMISSIONE
+emission_P = emission_P / np.sum(emission_P, axis=1, keepdims=True)
+#CALCOLO PROB. TRANSIZIONE
+transition_P = transition_P / np.sum(emission_P, axis=1, keepdims=True)
+
+'''
+row_sums = np.sum(emission_P, axis=1, keepdims=True)      
+non_zero_rows = row_sums != 0
+emission_P[non_zero_rows] = emission_P[non_zero_rows] / row_sums[non_zero_rows]
+
+row_sums = np.sum(transition_P, axis=1, keepdims=True)      
+non_zero_rows = row_sums != 0
+transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_rows]
 
 
 ###PROBABILITA' DI EMISSIONE E TRANSIZIONE###
@@ -82,14 +95,15 @@ for r, row in enumerate(emission_P):
       tagTot += i
    if (tagTot>0): 
       for idx, value in enumerate(row):     #CALCOLO PROB. EMISSIONE
-            emission_P[r][idx] = value / tagTot
-
-      for t in transition_P[r]:      #CALCOLO PROB. TRANSIZIONE    
+            emission_P[r][idx] = value/tagTot
+      self.transition_P = self.transition_P / np.sum(self.transition_P, axis=1, keepdims=True)
+      
+      for t in transition_P[r]:          
          t = t/tagTot
-
+'''
 print(transition_P)
 
-'''
+
 #salva le matrici risultanti in due files .csv
 emiss_csv = "emissione_en.csv"
 transiz_csv = "transizione_en.csv"
@@ -102,4 +116,3 @@ with open(transiz_csv, mode='w', newline='') as transiz:
     writer = csv.writer(transiz)
     writer.writerows(transition_P)
 
-'''
