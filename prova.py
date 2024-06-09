@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import csv
 import os
@@ -66,7 +67,7 @@ for riga in prime_100_righe:
         transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags
         tag_prec = "START"         
 
-#print(tags)
+#print(emission_P)
 #print(transition_P)
 
 #CALCOLO PROB. EMISSIONE
@@ -85,7 +86,7 @@ transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_ro
 
 
 ###PROBABILITA' DI EMISSIONE E TRANSIZIONE###
-#Una volta ottenute le matrici con le occorrenze di trasmissione e di transizione,
+#Una volta ottenute le matrici con le occorrenze di emissione e di transizione,
 #in ogni riga avremo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo in tagTot
 #la variabile tagTot verrà usata nei due cicli for incapsulati nel primo, 
 #per calcolare le probabilità di emissione e tansizione
@@ -94,25 +95,31 @@ for r, row in enumerate(emission_P):
    for i in row:
       tagTot += i
    if (tagTot>0): 
-      for idx, value in enumerate(row):     #CALCOLO PROB. EMISSIONE
-            emission_P[r][idx] = value/tagTot
-      self.transition_P = self.transition_P / np.sum(self.transition_P, axis=1, keepdims=True)
-      
-      for t in transition_P[r]:          
-         t = t/tagTot
+      for emissCol, value in enumerate(row):     #CALCOLO PROB. EMISSIONE
+         emission_P[r][emissCol] = value/tagTot    
+      for transCol, val in enumerate(transition_P[r]):        #CALCOLO PROB. EMISSIONE   
+         transition_P[r][transCol] = val/tagTot  
+             
 '''
-print(transition_P)
+#print(emission_P)
+#print(transition_P)
 
-
-#salva le matrici risultanti in due files .csv
-emiss_csv = "emissione_en.csv"
-transiz_csv = "transizione_en.csv"
-
-with open(emiss_csv, mode='w', newline='') as emiss:
-    writer = csv.writer(emiss)
+# Salva i dati in un unico file CSV
+with open('probabilities.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    
+    # Scrivi array1
+    writer.writerow(['tags'])
+    writer.writerow(tags)
+    
+    # Scrivi array2
+    writer.writerow(['words'])
+    writer.writerow(words)
+    
+    # Scrivi matrix1
+    writer.writerow(['emissione'])
     writer.writerows(emission_P)
-
-with open(transiz_csv, mode='w', newline='') as transiz:
-    writer = csv.writer(transiz)
+    
+    # Scrivi matrix2
+    writer.writerow(['transizione'])
     writer.writerows(transition_P)
-

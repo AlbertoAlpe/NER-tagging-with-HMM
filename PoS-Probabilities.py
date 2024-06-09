@@ -1,16 +1,18 @@
 import numpy as np
 import csv
 import os
+
+###LETTURA FILE DI TRAIN
 file_name = 'train.conllu'
 current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(current_dir, 'wikineural_en', file_name)
 
-train = open(file_path, 'r', encoding='utf-8')
-prime_100_righe = train.readlines()[:100]
+with open(file_path, 'r', encoding='utf-8') as train:
+   prime_100_righe = train.readlines()[:100]
 
 
 emission_P = [[], []]     #matrice iniziale composta da due righe vuote
-transition_P = [[0, 0], [0, 0]]  
+transition_P = [[0, 0], [0, 0]]  #matrice iniziale 2x2
 tags = ['START', 'END']
 words = []
 word = 0
@@ -30,7 +32,7 @@ def aggiungi_colonna(matrice):
 #Gli array tags e words contengono una lista dei tag e delle parole presenti nel corpus;
 #La matrice transition_P viene aggiornata dinamicamente e avrà un tag per ogni riga e uno per ogni colonna;
 #in questo modo ogni cella funzionerà come contatore delle occorrenze di transizione da tag(riga-1) -> tag(riga).
-#La matrice emission_P avrà un tagp per ogni riga e una word per ogni colonna; ogni cella conterà il numero di
+#La matrice emission_P avrà un tag per ogni riga e una word per ogni colonna; ogni cella conterà il numero di
 #occorrenze di emissione tag(riga) -> word(riga)  
 #conta le occorrenze di tag_prec->tag e di tag->parola e le inserisce nelle relative matrici
 for riga in prime_100_righe:
@@ -66,7 +68,7 @@ for riga in prime_100_righe:
         transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags
         tag_prec = "START"         
 
-#print(tags)
+#print(emission_P)
 #print(transition_P)
 
 #CALCOLO PROB. EMISSIONE
@@ -74,44 +76,25 @@ emission_P = emission_P / np.sum(emission_P, axis=1, keepdims=True)
 #CALCOLO PROB. TRANSIZIONE
 transition_P = transition_P / np.sum(emission_P, axis=1, keepdims=True)
 
-'''
-row_sums = np.sum(emission_P, axis=1, keepdims=True)      
-non_zero_rows = row_sums != 0
-emission_P[non_zero_rows] = emission_P[non_zero_rows] / row_sums[non_zero_rows]
+#print(emission_P)
+#print(transition_P)
 
-row_sums = np.sum(transition_P, axis=1, keepdims=True)      
-non_zero_rows = row_sums != 0
-transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_rows]
-
-
-###PROBABILITA' DI EMISSIONE E TRANSIZIONE###
-#Una volta ottenute le matrici con le occorrenze di trasmissione e di transizione,
-#in ogni riga avremo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo in tagTot
-#la variabile tagTot verrà usata nei due cicli for incapsulati nel primo, 
-#per calcolare le probabilità di emissione e tansizione
-for r, row in enumerate(emission_P):
-   tagTot = 0
-   for i in row:
-      tagTot += i
-   if (tagTot>0): 
-      for idx, value in enumerate(row):     #CALCOLO PROB. EMISSIONE
-            emission_P[r][idx] = value/tagTot
-      self.transition_P = self.transition_P / np.sum(self.transition_P, axis=1, keepdims=True)
-      
-      for t in transition_P[r]:          
-         t = t/tagTot
-'''
-print(transition_P)
-
-
-#salva le matrici risultanti in due files .csv
-emiss_csv = "emissione_en.csv"
-transiz_csv = "transizione_en.csv"
-
-with open(emiss_csv, mode='w', newline='') as emiss:
-    writer = csv.writer(emiss)
+# Salva i dati in un unico file CSV
+with open('probabilities.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    
+    # Scrivi array1
+    writer.writerow(['tags'])
+    writer.writerow(tags)
+    
+    # Scrivi array2
+    writer.writerow(['words'])
+    writer.writerow(words)
+    
+    # Scrivi matrix1
+    writer.writerow(['emissione'])
     writer.writerows(emission_P)
-
-with open(transiz_csv, mode='w', newline='') as transiz:
-    writer = csv.writer(transiz)
+    
+    # Scrivi matrix2
+    writer.writerow(['transizione'])
     writer.writerows(transition_P)

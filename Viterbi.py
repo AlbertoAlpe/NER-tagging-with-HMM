@@ -23,18 +23,88 @@ es. partiremo dalla cella end, avrà un solo puntatore (alla cella che l'ha port
 
 ->come salvare i puntatori? ne serve uno per cella; creare un'altra matrice di righe=t(il numero dei tag) per ogni parola della frase?Però il numero di colonne cambia ogni volte(es. frase da 10 parole o da 15). Ci sono metodi più efficienti?
 '''
+import csv
+import os
 
-from PoS-Probabilities.py import tags, words
 
-viterbi = []
+# Variabili per memorizzare i dati
+tags = []
+words = []
+emission_P = []
+transition_P = []
 
+###################################
+###LETTURA FILE 'PoS_Probabilities'
+#Leggi array e matrici con i pesi di riferimento dal file CSV
+with open('probabilities.csv', 'r') as file:
+    reader = csv.reader(file)
+    section = None
+    
+    for row in reader:
+        if row:
+            if row[0] == 'tags':
+                section = 'tags'
+                tags = next(reader)
+                tags = [int(x) for x in emission_P]
+            elif row[0] == 'words':
+                section = 'words'
+                words = next(reader)
+                words = [int(x) for x in transition_P]
+            elif row[0] == 'emissione':
+                section = 'emissione'
+                emission_P = []
+            elif row[0] == 'transizione':
+                section = 'transizione'
+                transition_P = []
+            elif section == 'matrix1':
+                emission_P.append([int(x) for x in row])
+            elif section == 'matrix2':
+                transition_P.append([int(x) for x in row])
+
+# Visualizza i dati
+print("Array tags:", tags)
+print("Array words:", words)
+print("emissione:", emission_P)
+print("transizione:", transition_P)
+
+#######################
+###LETTURA FILE DI TEST
+file_name = 'test.conllu'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_dir, 'wikineural_en', file_name)
+
+with open(file_path, 'r', encoding='utf-8') as train:
+   prime_100_righe = train.readlines()[:100]
+
+#un array che contiene le parole della frase da analizzare
+parole = ['start', 'end']
+#una matrice viterbi che a ogni iterazione conterrà i risultati dei calcoli
+viterbi = [0][0]
+#e una matrice puntatori di uguale dimensione per poter fare backtrace
+puntatori = [0][0]
+
+#nota: le due matrici contengono già i due tag 'start' e 'end' 
+#ATTENZIONE ALLA GESTIONE DEGLI INDICI! END ANDREBBE ALLA FINE
+
+#una funzione per aggiungere dinamicamente una colonna a una matrice
+def aggiungi_colonna(matrice):
+    for row in matrice:
+        row.append(0)
+
+#un ciclo for generale legge tutte le frasi del file test
 for riga in prime_100_righe:
     riga = riga.strip()
     if riga:
-        riga = riga.split()
-        if riga[1] not in words:    #se la parola è nuova, aggiorna le dimensioni di words e di emission_P
-           words.append(riga[1])
-           word = len(words) - 1
-           aggiungi_colonna(emission_P)
-        else:   
-           word = words.index(riga[1])
+        parole.append(riga[1])
+        aggiungi_colonna(viterbi)
+        aggiungi_colonna(puntatori)
+
+    else:     #riga vuota => end of sentence
+        #MATRICE COMPLETA; qui si fanno i calcoli per la singola frase
+        #...
+        #Fine calcoli, si reinizializzano matrici e array
+        parole = ['start', 'end']
+        puntatori = [0][0]
+        parole = [0][0]
+
+
