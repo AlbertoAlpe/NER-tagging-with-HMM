@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(current_dir, 'wikineural_en', file_name)
 
 train = open(file_path, 'r', encoding='utf-8')
-prime_100_righe = train.readlines()[:100]
+prime_100_righe = train.readlines()[:10]
 
 
 emission_P = [[], []]     #matrice iniziale composta da due righe vuote
@@ -27,6 +27,45 @@ def aggiungi_riga(matrice):
 def aggiungi_colonna(matrice):
     for row in matrice:
         row.append(0)
+
+
+
+# Algoritmo di Viterbi
+def viterbi(sequence, emission_P, transition_P, tags, words):
+    n = len(sequence)
+    m = len(tags)
+    viterbi_matrix = np.zeros((m, n))
+    backpointer = np.zeros((m, n), dtype=int)
+
+    # Initialization step
+    for s in range(2, m):  # Ignoro START e END nei calcoli
+        if sequence[0] in words:
+            viterbi_matrix[s, 0] = transition_P[0, s] * emission_P[s, words.index(sequence[0])]
+        else:
+            viterbi_matrix[s, 0] = transition_P[0, s]
+
+    # Recursion step
+    for t in range(1, n):
+        for s in range(2, m):
+            max_tr_prob = viterbi_matrix[:, t-1] * transition_P[:, s]
+            backpointer[s, t] = np.argmax(max_tr_prob)
+            if sequence[t] in words:
+                viterbi_matrix[s, t] = np.max(max_tr_prob) * emission_P[s, words.index(sequence[t])]
+            else:
+                viterbi_matrix[s, t] = np.max(max_tr_prob)
+
+    # Termination step
+    max_prob = viterbi_matrix[:, n-1] * transition_P[:, 1]
+    best_path_pointer = np.argmax(max_prob)
+    best_path = [best_path_pointer]
+
+    for t in range(n-1, 0, -1):
+        best_path_pointer = backpointer[best_path_pointer, t]
+        best_path.insert(0, best_path_pointer)
+
+    best_tag_sequence = [tags[i] for i in best_path]
+
+    return best_tag_sequence        
 
 #Gli array tags e words contengono una lista dei tag e delle parole presenti nel corpus;
 #La matrice transition_P viene aggiornata dinamicamente e avrà un tag per ogni riga e uno per ogni colonna;
@@ -67,13 +106,36 @@ for riga in prime_100_righe:
         transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags
         tag_prec = "START"         
 
-#print(emission_P)
-#print(transition_P)
+print(emission_P)
+print(transition_P)
 
-#CALCOLO PROB. EMISSIONE
-emission_P = emission_P / np.sum(emission_P, axis=1, keepdims=True)
-#CALCOLO PROB. TRANSIZIONE
-transition_P = transition_P / np.sum(emission_P, axis=1, keepdims=True)
+# Calcolo delle probabilità di emissione
+emission_P = np.array(emission_P, dtype=float)
+row_sums = np.sum(emission_P, axis=1, keepdims=True)
+non_zero_rows = row_sums.squeeze() != 0
+emission_P[non_zero_rows] = emission_P[non_zero_rows] / row_sums[non_zero_rows]
+
+# Calcolo delle probabilità di transizione
+transition_P = np.array(transition_P, dtype=float)
+row_sums = np.sum(transition_P, axis=1, keepdims=True)
+non_zero_rows = row_sums.squeeze() != 0
+transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_rows]
+
+
+print(emission_P)
+print(transition_P)
+
+sequence = ["This", "division", "also", "contains", "the"]
+
+print("Input sequence:", sequence)
+predicted_tags = viterbi(sequence, emission_P, transition_P, tags, words)
+print("Predicted tags:", predicted_tags)
+
+
+
+
+
+
 
 '''
 row_sums = np.sum(emission_P, axis=1, keepdims=True)      
@@ -100,7 +162,7 @@ for r, row in enumerate(emission_P):
       for transCol, val in enumerate(transition_P[r]):        #CALCOLO PROB. EMISSIONE   
          transition_P[r][transCol] = val/tagTot  
              
-'''
+
 #print(emission_P)
 #print(transition_P)
 
@@ -123,3 +185,4 @@ with open('probabilities.csv', 'w', newline='') as file:
     # Scrivi matrix2
     writer.writerow(['transizione'])
     writer.writerows(transition_P)
+    '''
