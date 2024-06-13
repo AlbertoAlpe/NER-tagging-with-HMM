@@ -63,7 +63,6 @@ for riga in prime_100_righe:
         stampa(sequence)
         print("tags: ")
         stampa(final_sequence)
-
         sequence = []
         final_sequence = []
 
