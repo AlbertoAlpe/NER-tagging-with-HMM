@@ -2,6 +2,7 @@ import numpy as np
 import csv
 import os
 import viterbi
+import baselines
 
 # Variabili per memorizzare i dati
 tags = []
@@ -58,7 +59,8 @@ for riga in prime_100_righe:
         sequence.append(riga[1])
 
     else:     # riga vuota => end of sentence
-        final_sequence = viterbi.viterbi(sequence, emission_P, transition_P, tags, words)
+        #final_sequence = viterbi.viterbi(sequence, emission_P, transition_P, tags, words)
+        final_sequence = baselines.easy_baseline(sequence, emission_P, tags, words)
         print("frase: ")
         print(sequence)
         print("tags: ")

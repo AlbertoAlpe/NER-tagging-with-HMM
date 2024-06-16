@@ -8,7 +8,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(current_dir, 'wikineural_en', file_name)
 
 with open(file_path, 'r', encoding='utf-8') as train:
-   prime_100_righe = train.readlines()[:1000]
+   righe = train.readlines()
 
 
 emission_P = [[], []]     #matrice iniziale composta da due righe vuote
@@ -35,7 +35,7 @@ def aggiungi_colonna(matrice):
 #La matrice emission_P avrà un tag per ogni riga e una word per ogni colonna; ogni cella conterà il numero di
 #occorrenze di emissione tag(riga) -> word(riga)  
 #conta le occorrenze di tag_prec->tag e di tag->parola e le inserisce nelle relative matrici
-for riga in prime_100_righe:
+for riga in righe:
     riga = riga.strip()
     if riga:
         riga = riga.split()

@@ -34,7 +34,7 @@ def viterbi(sequence, emission_P, transition_P, tags, words):
                 backpointer[tag, word] = np.argmax(max_tr_prob)
                 viterbi_matrix[tag, word] = np.max(max_tr_prob) * emission_P[tag, words.index(sequence[word])]
         else:       #se la parola è sconosciuta
-        #versione base    
+        #versione base
             viterbi_matrix[tag, word] = np.max(max_tr_prob)
         #SMOOOTHING
             #vers. 1: P(unk|O)=1
