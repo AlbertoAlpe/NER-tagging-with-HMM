@@ -106,7 +106,7 @@ def evaluate(test_sentences, emission_P, transition_P, tags, words):
                 if predicted_tag == true_tag: 
                     true_positives += 1 
                 else: 
-                    false_positives += 1 
+                    false_positives += 1
             if true_tag.startswith("B-") or true_tag.startswith("I-"): 
                 if true_tag != predicted_tag: 
                     false_negatives += 1 
@@ -114,10 +114,7 @@ def evaluate(test_sentences, emission_P, transition_P, tags, words):
     accuracy = correct / total 
     precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0 
     recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0 
-    f1_score = 2 * (precision *
-
-Roberto Gjokaj, [26/06/2024 16:18]
-recall) / (precision + recall) if (precision + recall) > 0 else 0 
+    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0 
  
     return accuracy, precision, recall, f1_score 
  
@@ -161,10 +158,7 @@ for riga in prime_100_righe:
         #in questo caso la riga è vuota => il tag è END, si fanno i calcoli necessari e poi il tag_prec diventa START 
         tpi = tags.index(tag_prec) 
         transition_P[tpi][1] += 1  #indice 1 perchè END è il secondo elemento dell'array tags 
-        tag_prec = "START"          
- 
-print(emission_P) 
-print(transition_P) 
+        tag_prec = "START"           
  
 # Calcolo delle probabilità di emissione 
 emission_P = np.array(emission_P, dtype=float) 
@@ -218,7 +212,7 @@ transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_ro
 #Una volta ottenute le matrici con le occorrenze di emissione e di transizione, 
 #in ogni riga avremo tutte le occorrenze di un tag divise per ogni parola, quindi le sommiamo in tagTot 
 #la variabile tagTot verrà usata nei due cicli for incapsulati nel primo,  
-#per calcolare le probabilità di emissione e tansizione 
+#per calcolare le probabilità di emissione e transizione 
 for r, row in enumerate(emission_P): 
    tagTot = 0 
    for i in row: 
@@ -252,4 +246,4 @@ with open('probabilities.csv', 'w', newline='') as file:
     # Scrivi matrix2 
     writer.writerow(['transizione']) 
     writer.writerows(transition_P) 
-    '''
+'''
