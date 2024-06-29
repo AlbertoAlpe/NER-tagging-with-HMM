@@ -14,6 +14,3 @@ def easy_baseline(sequence, emission_P, tags, words):
             tag_sequence.append('MISC')
         
     return tag_sequence
-
-# baseline che utilizza il Maximum Entropy Markov Model - https://github.com/Gan-Tu/ML-DL-NLP/tree/master/MEMM-POS-Tagger
-#def memm_baseline(sequence, emission_P, transition_P, tags, words):
