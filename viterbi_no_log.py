@@ -1,9 +1,7 @@
 import numpy as np
 
 # Algoritmo di Viterbi
-def viterbi(sentence, emission_P, transition_P, tags, words):
-    log_emission_P = np.log(emission_P)
-    log_transition_P = np.log(transition_P)
+def viterbi_no_log(sentence, emission_P, transition_P, tags, words):
     n = len(sentence)
     m = len(tags)
     viterbi_matrix = np.zeros((m, n))
@@ -14,56 +12,57 @@ def viterbi(sentence, emission_P, transition_P, tags, words):
     # Initialization step
     for tag in range(2, m):  # Ignoro START e END nei calcoli
         if sentence[0] in words:
-            viterbi_matrix[tag, 0] = log_transition_P[0, tag] + log_emission_P[tag, words.index(sentence[0])]
+            viterbi_matrix[tag, 0] = transition_P[0, tag] * emission_P[tag, words.index(sentence[0])]
         else:       #se la parola è sconosciuta
         #versione base, solo transizione    
-            viterbi_matrix[tag, 0] = log_transition_P[0, tag]
-    '''
+            viterbi_matrix[tag, 0] = transition_P[0, tag]
+    ''' 
        #SMOOTHING
             #vers. 1: P(unk|O)=1
-            viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex]
+            viterbi_matrix[Oindex, 0] = transition_P[0, Oindex] * 1
             #vers. 2: P(unk|O)=P(unk|B-MISC)=0.5 
-            viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex] * 0.5
-            viterbi_matrix[MISCindex, 0] = log_transition_P[0, MISCindex] * 0.5
+            viterbi_matrix[Oindex, 0] = transition_P[0, Oindex] * 0.5
+            viterbi_matrix[MISCindex, 0] = transition_P[0, MISCindex] * 0.5
             #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
-            viterbi_matrix[tag, 0] = log_transition_P[0, tag] * 1/m    
-            
+            viterbi_matrix[tag, 0] = transition_P[0, tag] * 1/m    
+            #aggiungere statistica development set(assume the unknown words have a probability distribution similar to
+            # words only occurring once in the training set)
     '''
     # Recursion step
     for word in range(1, n):
         if sentence[word] in words:
             for tag in range(2, m):
-                max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+                max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, tag]
                 backpointer[tag, word] = np.argmax(max_tr_prob)
-                viterbi_matrix[tag, word] = np.max(max_tr_prob) + log_emission_P[tag, words.index(sentence[word])]
+                viterbi_matrix[tag, word] = np.max(max_tr_prob) * emission_P[tag, words.index(sentence[word])]
         else:       #se la parola è sconosciuta
         #versione base
             for tag in range(2, m):
-                max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+                max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, tag]
                 backpointer[tag, word] = np.argmax(max_tr_prob)
                 viterbi_matrix[tag, word] = np.max(max_tr_prob)
         '''
         #SMOOOTHING
             #vers. 1: P(unk|O)=1
-            max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
+            max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, Oindex]
             backpointer[Oindex, word] = np.argmax(max_tr_prob)
             viterbi_matrix[Oindex, word] = np.max(max_tr_prob)
             #vers. 2: P(unk|O)=P(unk|B-MISC)=0.5    
-            max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
+            max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, Oindex]
             backpointer[Oindex, word] = np.argmax(max_tr_prob)
             viterbi_matrix[Oindex, word] = np.max(max_tr_prob) * 0.5
-            max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, MISCindex]
+            max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, MISCindex]
             backpointer[MISCindex, word] = np.argmax(max_tr_prob)
             viterbi_matrix[MISCindex, word] = np.max(max_tr_prob) * 0.5
             #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
             for tag in range(2, m):
-                max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+                max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, tag]
                 backpointer[tag, word] = np.argmax(max_tr_prob)
                 viterbi_matrix[tag, word] = np.max(max_tr_prob) * 1/len(m)
         '''
     
     # Termination step
-    max_prob = viterbi_matrix[:, n-1] + log_transition_P[:, 1]
+    max_prob = viterbi_matrix[:, n-1] * transition_P[:, 1]
     best_path_pointer = np.argmax(max_prob)
     best_path = [best_path_pointer]
 
