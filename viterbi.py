@@ -1,8 +1,8 @@
 import numpy as np
 
 # Algoritmo di Viterbi
-def viterbi(sequence, emission_P, transition_P, tags, words):
-    n = len(sequence)
+def viterbi(sentence, emission_P, transition_P, tags, words):
+    n = len(sentence)
     m = len(tags)
     viterbi_matrix = np.zeros((m, n))
     backpointer = np.zeros((m, n), dtype=int)
@@ -11,8 +11,8 @@ def viterbi(sequence, emission_P, transition_P, tags, words):
 
     # Initialization step
     for tag in range(2, m):  # Ignoro START e END nei calcoli
-        if sequence[0] in words:
-            viterbi_matrix[tag, 0] = transition_P[0, tag] * emission_P[tag, words.index(sequence[0])]
+        if sentence[0] in words:
+            viterbi_matrix[tag, 0] = transition_P[0, tag] * emission_P[tag, words.index(sentence[0])]
         else:       #se la parola è sconosciuta
         #versione base, solo transizione    
             viterbi_matrix[tag, 0] = transition_P[0, tag]
@@ -25,15 +25,16 @@ def viterbi(sequence, emission_P, transition_P, tags, words):
             viterbi_matrix[MISCindex, 0] = transition_P[0, MISCindex] * 0.5
             #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
             viterbi_matrix[tag, 0] = transition_P[0, tag] * 1/m    
-            #aggiungere statistica development set(parole che compaiono una sola volta)
+            #aggiungere statistica development set(assume the unknown words have a probability distribution similar to
+            # words only occurring once in the training set)
     '''
     # Recursion step
     for word in range(1, n):
-        if sequence[word] in words:
+        if sentence[word] in words:
             for tag in range(2, m):
                 max_tr_prob = viterbi_matrix[:, word-1] * transition_P[:, tag]
                 backpointer[tag, word] = np.argmax(max_tr_prob)
-                viterbi_matrix[tag, word] = np.max(max_tr_prob) * emission_P[tag, words.index(sequence[word])]
+                viterbi_matrix[tag, word] = np.max(max_tr_prob) * emission_P[tag, words.index(sentence[word])]
         else:       #se la parola è sconosciuta
         #versione base
             for tag in range(2, m):
