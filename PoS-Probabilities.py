@@ -69,14 +69,32 @@ for riga in righe:
         tag_prec = "START"         
 
 
-# Calcolo delle probabilità di emissione
+# trasformiamo le matrici in matrici numpy
 emission_P = np.array(emission_P, dtype=float)
+transition_P = np.array(transition_P, dtype=float)
+
+# Calcolo statistiche per development set:
+# se la somma dei valori in una colonna di emission_P è 1, allora quella parola compare una volta
+# gli indici di 'tags' e 'array_dev_set' coincidono
+# per ogni tag calcoliamo quante volte 
+t = len(tags)
+array_dev_set = np.zeros(t)
+for col in range(emission_P.shape[1]):  # il numero di colonne in matrice
+        column = emission_P[:, col]
+        if np.sum(column) == 1:     
+            row_index = np.where(column == 1)[0][0] # tag corrispondente
+            array_dev_set[row_index] += 1
+tot = np.sum(array_dev_set)
+for i in range(0, len(array_dev_set)):
+   array_dev_set[i] /= tot
+
+
+# Calcolo delle probabilità di emissione
 row_sums = np.sum(emission_P, axis=1, keepdims=True)
 non_zero_rows = row_sums.squeeze() != 0
 emission_P[non_zero_rows] = emission_P[non_zero_rows] / row_sums[non_zero_rows]
 
 # Calcolo delle probabilità di transizione
-transition_P = np.array(transition_P, dtype=float)
 row_sums = np.sum(transition_P, axis=1, keepdims=True)
 non_zero_rows = row_sums.squeeze() != 0
 transition_P[non_zero_rows] = transition_P[non_zero_rows] / row_sums[non_zero_rows]
@@ -93,6 +111,10 @@ with open('probabilities.csv', 'w', newline='', encoding='utf-8') as file:
     # Scrivi array words
     writer.writerow(['words'])
     writer.writerow(words)
+    
+    # Scrivi array development set
+    writer.writerow(['array_dev_set'])
+    writer.writerow(array_dev_set)
     
     # Scrivi matrice emissione
     writer.writerow(['emissione'])
