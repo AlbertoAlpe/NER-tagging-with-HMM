@@ -5,7 +5,7 @@ import os
 ###LETTURA FILE DI TRAIN
 file_name = 'train.conllu'
 current_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(current_dir, 'wikineural_it', file_name)
+file_path = os.path.join(current_dir, 'wikineural_es', file_name)
 
 with open(file_path, 'r', encoding='utf-8') as train:
    righe = train.readlines()
@@ -54,7 +54,6 @@ for riga in righe:
            aggiungi_riga(emission_P)
         else:
            tag = tags.index(riga[2]) 
-        
         #in tag abbiamo l'indice della riga in cui operare
         #in word abbiamo l'indice della parola in cui operare
         emission_P[tag][word] += 1 
@@ -74,9 +73,9 @@ emission_P = np.array(emission_P, dtype=float)
 transition_P = np.array(transition_P, dtype=float)
 
 # Calcolo statistiche per development set:
-# se la somma dei valori in una colonna di emission_P è 1, allora quella parola compare una volta
+# se la somma dei valori in una colonna di emission_P è 1, allora quella parola compare una sola volta
 # gli indici di 'tags' e 'array_dev_set' coincidono
-# per ogni tag calcoliamo quante volte 
+# per ogni tag calcoliamo quante parole corrispondono poi dividiamo per il tottale 
 t = len(tags)
 array_dev_set = np.zeros(t)
 for col in range(emission_P.shape[1]):  # il numero di colonne in matrice
@@ -87,12 +86,17 @@ for col in range(emission_P.shape[1]):  # il numero di colonne in matrice
 tot = np.sum(array_dev_set)
 for i in range(0, len(array_dev_set)):
    array_dev_set[i] /= tot
-
+array_dev_set = np.array(array_dev_set, dtype=float)
 
 # Calcolo delle probabilità di emissione
 row_sums = np.sum(emission_P, axis=1, keepdims=True)
 non_zero_rows = row_sums.squeeze() != 0
 emission_P[non_zero_rows] = emission_P[non_zero_rows] / row_sums[non_zero_rows]
+#una colonna aggiuntiva rappresenta le statistiche del development set (array_dev_set)
+array_dev_set = array_dev_set.reshape(-1, 1)
+# np.column_stack aggiunge l'array come ultima colonna
+emission_P = np.column_stack((emission_P, array_dev_set))
+
 
 # Calcolo delle probabilità di transizione
 row_sums = np.sum(transition_P, axis=1, keepdims=True)
@@ -111,10 +115,6 @@ with open('probabilities.csv', 'w', newline='', encoding='utf-8') as file:
     # Scrivi array words
     writer.writerow(['words'])
     writer.writerow(words)
-    
-    # Scrivi array development set
-    writer.writerow(['array_dev_set'])
-    writer.writerow(array_dev_set)
     
     # Scrivi matrice emissione
     writer.writerow(['emissione'])

@@ -16,9 +16,8 @@ def viterbi(sentence, emission_P, transition_P, tags, words):
         if sentence[0] in words:
             viterbi_matrix[tag, 0] = log_transition_P[0, tag] + log_emission_P[tag, words.index(sentence[0])]
         else:       #se la parola è sconosciuta
-        #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
-            viterbi_matrix[tag, 0] = log_transition_P[0, tag] * 1/m
-        
+        #SMOOTHING 4: statistiche su parole che compaiono una volta sola
+            viterbi_matrix[tag, 0] = log_transition_P[0, tag] + log_emission_P[tag, -1]  
 
     # Recursion step
     for word in range(1, n):
@@ -28,11 +27,11 @@ def viterbi(sentence, emission_P, transition_P, tags, words):
                 backpointer[tag, word] = np.argmax(max_tr_prob)
                 viterbi_matrix[tag, word] = np.max(max_tr_prob) + log_emission_P[tag, words.index(sentence[word])]
         else:       #se la parola è sconosciuta
-        #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
+        #SMOOTHING 4: statistiche su parole che compaiono una volta sola
             for tag in range(2, m):
                 max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
                 backpointer[tag, word] = np.argmax(max_tr_prob)
-                viterbi_matrix[tag, word] = np.max(max_tr_prob) * 1/m
+                viterbi_matrix[tag, word] = np.max(max_tr_prob) + log_emission_P[tag, -1]
 
     
     # Termination step
@@ -50,55 +49,65 @@ def viterbi(sentence, emission_P, transition_P, tags, words):
 
 ### ALTERNATIVE PER SMOOTHING  --> da sostituire dopo gli else nei primi due step di Viterbi ###
 ### Initialization ###
-    '''
-        #versione base, solo transizione    
-        viterbi_matrix[tag, 0] = log_transition_P[0, tag]
-    
-        #vers. 1: P(unk|O)=1
-        viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex]
+'''
+
+#versione base, solo transizione    
+viterbi_matrix[tag, 0] = log_transition_P[0, tag]
+
+#################
+#SMOOTHING 1: P(unk|O)=1
+viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex]
+
+#################
+#SMOOTHING 2: P(unk|O)=P(unk|B-MISC)=0.5
+viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex] * 0.5
+viterbi_matrix[MISCindex, 0] = log_transition_P[0, MISCindex] * 0.5
+
+#################
+#SMOOTHING 3: uniforme-> P(unk|Ti)= 1/len(tags)
+viterbi_matrix[tag, 0] = log_transition_P[0, tag] * 1/m    
+
+#################        
+#SMOOTHING 4: statistiche su parole che compaiono una volta sola
+viterbi_matrix[tag, 0] = log_transition_P[0, tag] * array_dev_set[tag]        
             
-        #vers. 2: P(unk|O)=P(unk|B-MISC)=0.5
-        viterbi_matrix[Oindex, 0] = log_transition_P[0, Oindex] * 0.5
-        viterbi_matrix[MISCindex, 0] = log_transition_P[0, MISCindex] * 0.5
-            
-        #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
-        viterbi_matrix[tag, 0] = log_transition_P[0, tag] * 1/m    
-        
-        
-         #statistiche su parole che compaiono una volta sola
-            for t in array_dev_set:
-                #viterbi_matrix[tag]
-        
-            
-    '''
+'''
     
 ### Recursion ###
-    '''
-        #versione base
-            for tag in range(2, m):
-                max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
-                backpointer[tag, word] = np.argmax(max_tr_prob)
-                viterbi_matrix[tag, word] = np.max(max_tr_prob)
-    
-        #vers. 1: P(unk|O)=1
-        max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
-        backpointer[Oindex, word] = np.argmax(max_tr_prob)
-        viterbi_matrix[Oindex, word] = np.max(max_tr_prob)
-        
-        #vers. 2: P(unk|O)=P(unk|B-MISC)=0.5    
-        max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
-        backpointer[Oindex, word] = np.argmax(max_tr_prob)
-        viterbi_matrix[Oindex, word] = np.max(max_tr_prob) * 0.5
-        max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, MISCindex]
-        backpointer[MISCindex, word] = np.argmax(max_tr_prob)
-        viterbi_matrix[MISCindex, word] = np.max(max_tr_prob) * 0.5
-        
-        #vers. 3: uniforme-> P(unk|Ti)= 1/len(tags)
-        for tag in range(2, m):
-            max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
-            backpointer[tag, word] = np.argmax(max_tr_prob)
-            viterbi_matrix[tag, word] = np.max(max_tr_prob) * 1/m
-            
-        #4: statistiche su parole che compaiono una volta sola
+'''
+#versione base
+for tag in range(2, m):
+    max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+    backpointer[tag, word] = np.argmax(max_tr_prob)
+    viterbi_matrix[tag, word] = np.max(max_tr_prob)
 
-    '''
+#################
+#SMOOTHING 1: P(unk|O)=1
+max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
+backpointer[Oindex, word] = np.argmax(max_tr_prob)
+viterbi_matrix[Oindex, word] = np.max(max_tr_prob)
+
+#################
+#SMOOTHING 2: P(unk|O)=P(unk|B-MISC)=0.5    
+max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, Oindex]
+backpointer[Oindex, word] = np.argmax(max_tr_prob)
+viterbi_matrix[Oindex, word] = np.max(max_tr_prob) * 0.5
+max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, MISCindex]
+backpointer[MISCindex, word] = np.argmax(max_tr_prob)
+viterbi_matrix[MISCindex, word] = np.max(max_tr_prob) * 0.5
+
+#################
+#SMOOTHING 3: uniforme-> P(unk|Ti)= 1/len(tags)
+for tag in range(2, m):
+    max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+    backpointer[tag, word] = np.argmax(max_tr_prob)
+    viterbi_matrix[tag, word] = np.max(max_tr_prob) + log_emission_P[tag, -1]
+    
+#################            
+#SMOOTHING 4: statistiche su parole che compaiono una volta sola
+#SMOOTHING 3: uniforme-> P(unk|Ti)= 1/len(tags)
+for tag in range(2, m):
+    max_tr_prob = viterbi_matrix[:, word-1] + log_transition_P[:, tag]
+    backpointer[tag, word] = np.argmax(max_tr_prob)
+    viterbi_matrix[tag, word] = np.max(max_tr_prob) + log_emission_P[tag, -1]
+'''
